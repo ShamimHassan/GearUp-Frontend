@@ -1,26 +1,18 @@
 "use client";
 
-import { use, useState, useMemo, useCallback } from "react";
+import { use, useState, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { useRentalDetails } from "@/hooks/useRentals";
 import { useGearReviews } from "@/hooks/useGear";
 import { LinkButton, Button } from "@/components/ui/Button";
 import { StatusBadge, Badge } from "@/components/ui/Badge";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { Textarea } from "@/components/ui/Input";
-import {
-  Dialog, DialogContent, DialogHeader,
-  DialogTitle, DialogDescription, DialogFooter, DialogClose,
-} from "@/components/ui/Dialog";
-import { showSuccess, showError } from "@/components/ui/Toast";
+import { showError } from "@/components/ui/Toast";
 import { cn, formatDate, formatDateTime, calculateDays } from "@/lib/utils";
 import { RentalStatus, PaymentStatus, PaymentMethod, RENTAL_STATUS_FLOW } from "@/types";
 import type { RentalOrderWithRelations } from "@/types";
-import { reviewApi } from "@/api";
+import ReviewDialog from "@/components/review/ReviewDialog";
 
 // ─── Status stepper ───────────────────────────────────────────────────────────
 
@@ -496,7 +488,7 @@ export default function OrderDetailsPage({
           open={reviewOpen}
           onClose={() => setReviewOpen(false)}
           gearId={order.gearId}
-          orderId={order.id}
+          gearName={order.gear?.name}
         />
       )}
     </div>

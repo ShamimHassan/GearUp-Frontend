@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { format, differenceInCalendarDays, parseISO, isValid, startOfToday, addDays } from "date-fns";
 import { useGearDetails, useGearReviews } from "@/hooks/useGear";
+import { useMyRentals } from "@/hooks/useRentals";
 import { useIsAuthenticated, useUser } from "@/store/authStore";
 import { Badge } from "@/components/ui/Badge";
 import { Button, LinkButton } from "@/components/ui/Button";
@@ -12,38 +13,9 @@ import { Input } from "@/components/ui/Input";
 import { CardSkeleton, Skeleton } from "@/components/ui/Skeleton";
 import { cn, formatDate } from "@/lib/utils";
 import { showError } from "@/components/ui/Toast";
+import ReviewDialog, { StarDisplay } from "@/components/review/ReviewDialog";
+import { RentalStatus } from "@/types";
 import type { ReviewWithRelations } from "@/types";
-
-// ─── Star rating display ──────────────────────────────────────────────────────
-
-function StarDisplay({ rating, max = 5 }: { rating: number; max?: number }) {
-  return (
-    <div className="flex items-center gap-0.5" aria-label={`${rating} out of ${max} stars`}>
-      {Array.from({ length: max }).map((_, i) => {
-        const full = i + 1 <= Math.floor(rating);
-        const half = !full && i < rating && rating - i >= 0.5;
-        return (
-          <svg
-            key={i}
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            className={cn("h-4 w-4", full || half ? "text-amber-400" : "text-slate-200")}
-            fill={full ? "currentColor" : "none"}
-            stroke="currentColor"
-            strokeWidth="1.5"
-            aria-hidden="true"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.562.562 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z"
-            />
-          </svg>
-        );
-      })}
-    </div>
-  );
-}
 
 // ─── Image gallery ────────────────────────────────────────────────────────────
 
@@ -257,6 +229,58 @@ function ReviewsSection({ gearId }: { gearId: string }) {
       ) : (
         reviews.map((r) => <ReviewCard key={r.id} review={r} />)
       )}
+    </div>
+  );
+}
+
+// ─── Gear reviews section (with write-review button) ─────────────────────────
+
+function GearReviewsSection({ gearId, gearName }: { gearId: string; gearName: string }) {
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const isAuthenticated = useIsAuthenticated();
+  const user = useUser();
+
+  const { data: reviews = [], isLoading: reviewsLoading, refetch } = useGearReviews(gearId);
+  const { data: myRentals = [] } = useMyRentals({ enabled: isAuthenticated });
+
+  // Customer can review if they have a RETURNED rental for this gear and haven't reviewed yet
+  const hasReturnedRental = useMemo(
+    () => myRentals.some((r) => r.gearId === gearId && r.status === RentalStatus.RETURNED),
+    [myRentals, gearId],
+  );
+  const hasAlreadyReviewed = useMemo(
+    () => reviews.some((r) => r.userId === user?.id),
+    [reviews, user],
+  );
+  const canReview = isAuthenticated && user?.role === "CUSTOMER" && hasReturnedRental && !hasAlreadyReviewed;
+
+  return (
+    <div>
+      <div className="mb-6 flex items-center justify-between">
+        <h2 id="reviews-heading" className="text-xl font-bold text-slate-900">
+          Customer Reviews
+        </h2>
+        {canReview && (
+          <Button variant="outline" size="sm" onClick={() => setReviewOpen(true)}>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+              className="h-4 w-4" aria-hidden="true">
+              <path d="M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.562.562 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z"/>
+            </svg>
+            Write a review
+          </Button>
+        )}
+      </div>
+
+      <ReviewsSection gearId={gearId} />
+
+      <ReviewDialog
+        open={reviewOpen}
+        onClose={() => setReviewOpen(false)}
+        gearId={gearId}
+        gearName={gearName}
+        onSuccess={() => void refetch()}
+      />
     </div>
   );
 }
@@ -614,12 +638,7 @@ export default function GearDetailsPage({
 
         {/* Reviews */}
         <section className="mt-14" aria-labelledby="reviews-heading">
-          <div className="mb-6 flex items-center justify-between">
-            <h2 id="reviews-heading" className="text-xl font-bold text-slate-900">
-              Customer Reviews
-            </h2>
-          </div>
-          <ReviewsSection gearId={gear.id} />
+          <GearReviewsSection gearId={gear.id} gearName={gear.name} />
         </section>
 
       </div>
