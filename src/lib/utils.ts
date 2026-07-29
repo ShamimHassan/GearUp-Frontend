@@ -45,3 +45,17 @@ export function absoluteUrl(path: string) {
     "http://localhost:3000";
   return `${base}${path.startsWith("/") ? path : `/${path}`}`;
 }
+
+export function buildQueryParams<T extends object>(
+  filters?: T,
+): Record<string, unknown> {
+  const params: Record<string, unknown> = {};
+  if (!filters) return params;
+  (Object.keys(filters) as Array<keyof T>).forEach((key) => {
+    const value = filters[key];
+    if (value === undefined || value === null) return;
+    if (typeof value === "string" && value.length === 0) return;
+    params[key as string] = value;
+  });
+  return params;
+}
