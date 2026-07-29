@@ -103,18 +103,26 @@ export function useProviderOrders(
   });
 }
 
+type UpdateOrderStatusContext = {
+  prevOrders: RentalOrderWithRelations[] | undefined;
+  prevRentals: RentalOrderWithRelations[] | undefined;
+  prevRental: RentalOrderWithRelations | undefined;
+  prevAdminRentals: RentalOrderWithRelations[] | undefined;
+};
+
 export function useUpdateOrderStatus(
   options?: UseMutationOptions<
     RentalOrderWithRelations,
     Error,
-    { id: string; data: UpdateOrderStatusFormData }
+    { id: string; data: UpdateOrderStatusFormData },
+    UpdateOrderStatusContext
   >,
 ) {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useMutation<RentalOrderWithRelations, Error, { id: string; data: UpdateOrderStatusFormData }, UpdateOrderStatusContext>({
     mutationFn: ({ id, data }: { id: string; data: UpdateOrderStatusFormData }) =>
       providerApi.updateOrderStatus(id, data),
-    onMutate: async ({ id, data }) => {
+    onMutate: async ({ id, data }): Promise<UpdateOrderStatusContext> => {
       const ordersQueryKey = PROVIDER_ORDERS_KEY;
       const rentalListKey = RENTALS_LIST_KEY;
       const rentalDetailsKey = ["rentals", "details", id] as const;

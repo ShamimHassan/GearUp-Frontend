@@ -39,13 +39,13 @@ export function useAllUsers(
 }
 
 export function useUpdateUserStatus(
-  options?: UseMutationOptions<User, Error, { id: string; data: UpdateUserStatusFormData }>,
+  options?: UseMutationOptions<User, Error, { id: string; data: UpdateUserStatusFormData }, { prevUsers: User[] | undefined }>,
 ) {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useMutation<User, Error, { id: string; data: UpdateUserStatusFormData }, { prevUsers: User[] | undefined }>({
     mutationFn: ({ id, data }: { id: string; data: UpdateUserStatusFormData }) =>
       adminApi.updateUserStatus(id, data),
-    onMutate: async ({ id, data }) => {
+    onMutate: async ({ id, data }): Promise<{ prevUsers: User[] | undefined }> => {
       const prevUsers = queryClient.getQueryData<User[]>(ADMIN_USERS_KEY);
       if (prevUsers) {
         queryClient.setQueryData(

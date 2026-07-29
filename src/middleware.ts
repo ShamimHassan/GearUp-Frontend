@@ -37,7 +37,7 @@ const ROUTE_ROLE_REQUIREMENTS: Array<{ prefix: string; role: UserRole }> = [
   { prefix: "/dashboard/admin", role: UserRole.ADMIN },
 ];
 
-type JwtRoleClaim = UserRole | "CUSTOMER" | "PROVIDER" | "ADMIN" | undefined;
+type JwtRoleClaim = UserRole | string | undefined;
 
 interface DecodedJwtPayload {
   sub?: string;

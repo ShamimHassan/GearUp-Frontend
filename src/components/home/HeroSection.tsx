@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { Button, LinkButton } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";

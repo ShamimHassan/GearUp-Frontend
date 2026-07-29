@@ -359,7 +359,7 @@ export default function RegisterForm() {
             id="phone"
             type="tel"
             autoComplete="tel"
-            placeholder="+1 (555) 000-0000"
+            placeholder="+88 01774-500810"
             invalid={!!errors.phone}
             {...register("phone")}
           />

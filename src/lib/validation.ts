@@ -42,8 +42,8 @@ export const registerSchema = z.object({
     .optional()
     .or(z.literal(""))
     .refine(
-      (v) => !v || /^[+\d\s().-]{7,20}$/.test(v),
-      "Please enter a valid phone number"
+      (v) => !v || /^(\+880|0)1[3-9]\d{8}$/.test(v.replace(/[\s\-]/g, "")),
+      "Enter a valid Bangladeshi number, e.g. +8801774500810 or 01774500810"
     ),
   address: z
     .string()
@@ -72,8 +72,8 @@ export const profileSchema = z.object({
     .optional()
     .or(z.literal(""))
     .refine(
-      (v) => !v || /^[+\d\s().-]{7,20}$/.test(v),
-      "Please enter a valid phone number"
+      (v) => !v || /^(\+880|0)1[3-9]\d{8}$/.test(v.replace(/[\s\-]/g, "")),
+      "Enter a valid Bangladeshi number, e.g. +8801774500810 or 01774500810"
     ),
   address: z
     .string()
