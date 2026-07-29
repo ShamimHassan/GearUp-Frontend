@@ -98,47 +98,97 @@ export default function AdminRentalsPage() {
           size="sm" />
       )}
 
-      {/* Table */}
+      {/* Mobile cards + Desktop table */}
       {!isLoading && !isError && filtered.length > 0 && (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Order ID</TableHead>
-              <TableHead>Customer</TableHead>
-              <TableHead>Provider</TableHead>
-              <TableHead>Gear</TableHead>
-              <TableHead>Dates</TableHead>
-              <TableHead>Amount</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Placed</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+        <>
+          {/* ── Mobile cards (< md) ─────────────────────────────────────── */}
+          <div className="space-y-3 md:hidden">
             {filtered.map((r) => {
               const days = calculateDays(r.startDate, r.endDate);
               return (
-                <TableRow key={r.id}>
-                  <TableCell className="font-mono text-xs text-slate-500">{r.id.slice(0, 8)}…</TableCell>
-                  <TableCell>
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-slate-800 max-w-28">{r.customer?.name ?? "—"}</p>
-                      <p className="truncate text-xs text-slate-400 max-w-28">{r.customer?.email ?? ""}</p>
+                <div key={r.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm space-y-3">
+                  {/* Gear + Customer */}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-slate-900">{r.gear?.name ?? "—"}</p>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        Customer: <span className="font-medium text-slate-700">{r.customer?.name ?? "—"}</span>
+                      </p>
+                      <p className="text-xs text-slate-400">{r.customer?.email ?? ""}</p>
                     </div>
-                  </TableCell>
-                  <TableCell className="text-sm text-slate-600 max-w-24 truncate">{r.gear?.provider?.name ?? "—"}</TableCell>
-                  <TableCell className="text-sm text-slate-700 max-w-28 truncate">{r.gear?.name ?? "—"}</TableCell>
-                  <TableCell>
-                    <p className="text-sm text-slate-700">{formatDate(r.startDate)} – {formatDate(r.endDate)}</p>
-                    <p className="text-xs text-slate-400">{days} day{days !== 1 ? "s" : ""}</p>
-                  </TableCell>
-                  <TableCell className="font-semibold text-slate-900">৳{r.totalAmount.toLocaleString("en-BD")}</TableCell>
-                  <TableCell><StatusBadge status={r.status} /></TableCell>
-                  <TableCell className="text-xs text-slate-400">{formatDate(r.createdAt)}</TableCell>
-                </TableRow>
+                    <StatusBadge status={r.status} />
+                  </div>
+                  {/* Meta row */}
+                  <div className="grid grid-cols-2 gap-2 text-xs border-t border-slate-100 pt-3">
+                    <div>
+                      <p className="text-slate-500">Provider</p>
+                      <p className="font-medium text-slate-700 truncate">{r.gear?.provider?.name ?? "—"}</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-500">Amount</p>
+                      <p className="font-bold text-slate-900">৳{r.totalAmount.toLocaleString("en-BD")}</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-500">Dates</p>
+                      <p className="font-medium text-slate-700">{formatDate(r.startDate)} – {formatDate(r.endDate)}</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-500">Duration</p>
+                      <p className="font-medium text-slate-700">{days} day{days !== 1 ? "s" : ""}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between border-t border-slate-100 pt-2">
+                    <p className="font-mono text-xs text-slate-400">{r.id.slice(0, 8)}…</p>
+                    <p className="text-xs text-slate-400">{formatDate(r.createdAt)}</p>
+                  </div>
+                </div>
               );
             })}
-          </TableBody>
-        </Table>
+          </div>
+
+          {/* ── Desktop table (≥ md) ─────────────────────────────────────── */}
+          <div className="hidden md:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Order ID</TableHead>
+                  <TableHead>Customer</TableHead>
+                  <TableHead>Provider</TableHead>
+                  <TableHead>Gear</TableHead>
+                  <TableHead>Dates</TableHead>
+                  <TableHead>Amount</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Placed</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filtered.map((r) => {
+                  const days = calculateDays(r.startDate, r.endDate);
+                  return (
+                    <TableRow key={r.id}>
+                      <TableCell className="font-mono text-xs text-slate-500">{r.id.slice(0, 8)}…</TableCell>
+                      <TableCell>
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-slate-800 max-w-28">{r.customer?.name ?? "—"}</p>
+                          <p className="truncate text-xs text-slate-400 max-w-28">{r.customer?.email ?? ""}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-sm text-slate-600 max-w-24 truncate">{r.gear?.provider?.name ?? "—"}</TableCell>
+                      <TableCell className="text-sm text-slate-700 max-w-28 truncate">{r.gear?.name ?? "—"}</TableCell>
+                      <TableCell>
+                        <p className="text-sm text-slate-700">{formatDate(r.startDate)} – {formatDate(r.endDate)}</p>
+                        <p className="text-xs text-slate-400">{days} day{days !== 1 ? "s" : ""}</p>
+                      </TableCell>
+                      <TableCell className="font-semibold text-slate-900">৳{r.totalAmount.toLocaleString("en-BD")}</TableCell>
+                      <TableCell><StatusBadge status={r.status} /></TableCell>
+                      <TableCell className="text-xs text-slate-400">{formatDate(r.createdAt)}</TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        </>
       )}
     </div>
   );

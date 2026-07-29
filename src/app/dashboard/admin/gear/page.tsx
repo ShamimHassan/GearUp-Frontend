@@ -73,64 +73,118 @@ export default function AdminGearPage() {
         <EmptyState tone="gear" title="No gear found" description="Try adjusting your search." size="sm" />
       )}
 
-      {/* Table */}
+      {/* Mobile cards + Desktop table */}
       {!isLoading && !isError && filtered.length > 0 && (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Gear</TableHead>
-              <TableHead>Provider</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>Price / day</TableHead>
-              <TableHead>Stock</TableHead>
-              <TableHead>Available</TableHead>
-              <TableHead>Listed</TableHead>
-              <TableHead className="text-right">View</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+        <>
+          {/* ── Mobile cards (< md) ─────────────────────────────────────── */}
+          <div className="space-y-3 md:hidden">
             {filtered.map((item) => {
               const img = item.images?.[0];
               return (
-                <TableRow key={item.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-slate-100">
-                        {img ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={img} alt={item.name} className="h-full w-full object-cover"
-                            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
-                        ) : (
-                          <div className="absolute inset-0 flex items-center justify-center bg-linear-to-br from-indigo-400 to-sky-400 text-xs font-black text-white">
-                            {item.name.slice(0, 2).toUpperCase()}
-                          </div>
-                        )}
-                      </div>
-                      <p className="truncate text-sm font-semibold text-slate-800 max-w-36">{item.name}</p>
+                <div key={item.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm space-y-3">
+                  <div className="flex items-start gap-3">
+                    <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-slate-100">
+                      {img ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={img} alt={item.name} className="h-full w-full object-cover"
+                          onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center bg-linear-to-br from-indigo-400 to-sky-400 text-xs font-black text-white">
+                          {item.name.slice(0, 2).toUpperCase()}
+                        </div>
+                      )}
                     </div>
-                  </TableCell>
-                  <TableCell className="text-sm text-slate-600">{item.provider?.name ?? "—"}</TableCell>
-                  <TableCell>{item.category ? <Badge tone="blue" size="sm">{item.category.name}</Badge> : "—"}</TableCell>
-                  <TableCell className="font-semibold text-slate-900">৳{item.price.toLocaleString("en-BD")}</TableCell>
-                  <TableCell>
-                    <Badge tone={item.stock <= 0 ? "red" : item.stock <= 3 ? "orange" : "emerald"} size="sm">{item.stock}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    {item.isAvailable
-                      ? <Badge tone="emerald" size="sm">Yes</Badge>
-                      : <Badge tone="suspended" size="sm">No</Badge>}
-                  </TableCell>
-                  <TableCell className="text-xs text-slate-400">{formatDate(item.createdAt)}</TableCell>
-                  <TableCell className="text-right">
-                    <Link href={`/gear/${item.id}`} className="text-xs font-semibold text-red-700 hover:text-red-800 transition-colors">
-                      View →
+                    <div className="flex-1 min-w-0">
+                      <p className="truncate text-sm font-semibold text-slate-900">{item.name}</p>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        Provider: <span className="font-medium text-slate-700">{item.provider?.name ?? "—"}</span>
+                      </p>
+                      <div className="mt-1.5 flex flex-wrap gap-1.5">
+                        {item.category && <Badge tone="blue" size="sm">{item.category.name}</Badge>}
+                        <Badge tone={item.stock <= 0 ? "red" : item.stock <= 3 ? "orange" : "emerald"} size="sm">
+                          Stock: {item.stock}
+                        </Badge>
+                        {item.isAvailable
+                          ? <Badge tone="emerald" size="sm">Available</Badge>
+                          : <Badge tone="suspended" size="sm">Unlisted</Badge>}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between border-t border-slate-100 pt-3">
+                    <div>
+                      <p className="text-xs text-slate-500">Price / day</p>
+                      <p className="text-sm font-bold text-slate-900">৳{item.price.toLocaleString("en-BD")}</p>
+                    </div>
+                    <Link href={`/gear/${item.id}`}
+                      className="text-xs font-semibold text-red-700 hover:text-red-800 transition-colors">
+                      View listing →
                     </Link>
-                  </TableCell>
-                </TableRow>
+                  </div>
+                </div>
               );
             })}
-          </TableBody>
-        </Table>
+          </div>
+
+          {/* ── Desktop table (≥ md) ─────────────────────────────────────── */}
+          <div className="hidden md:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Gear</TableHead>
+                  <TableHead>Provider</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead>Price / day</TableHead>
+                  <TableHead>Stock</TableHead>
+                  <TableHead>Available</TableHead>
+                  <TableHead>Listed</TableHead>
+                  <TableHead className="text-right">View</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filtered.map((item) => {
+                  const img = item.images?.[0];
+                  return (
+                    <TableRow key={item.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-slate-100">
+                            {img ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={img} alt={item.name} className="h-full w-full object-cover"
+                                onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
+                            ) : (
+                              <div className="absolute inset-0 flex items-center justify-center bg-linear-to-br from-indigo-400 to-sky-400 text-xs font-black text-white">
+                                {item.name.slice(0, 2).toUpperCase()}
+                              </div>
+                            )}
+                          </div>
+                          <p className="truncate text-sm font-semibold text-slate-800 max-w-36">{item.name}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-sm text-slate-600">{item.provider?.name ?? "—"}</TableCell>
+                      <TableCell>{item.category ? <Badge tone="blue" size="sm">{item.category.name}</Badge> : "—"}</TableCell>
+                      <TableCell className="font-semibold text-slate-900">৳{item.price.toLocaleString("en-BD")}</TableCell>
+                      <TableCell>
+                        <Badge tone={item.stock <= 0 ? "red" : item.stock <= 3 ? "orange" : "emerald"} size="sm">{item.stock}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        {item.isAvailable
+                          ? <Badge tone="emerald" size="sm">Yes</Badge>
+                          : <Badge tone="suspended" size="sm">No</Badge>}
+                      </TableCell>
+                      <TableCell className="text-xs text-slate-400">{formatDate(item.createdAt)}</TableCell>
+                      <TableCell className="text-right">
+                        <Link href={`/gear/${item.id}`} className="text-xs font-semibold text-red-700 hover:text-red-800 transition-colors">
+                          View →
+                        </Link>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        </>
       )}
     </div>
   );
