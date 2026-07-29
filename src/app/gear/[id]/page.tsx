@@ -5,15 +5,14 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { format, differenceInCalendarDays, parseISO, isValid, startOfToday, addDays } from "date-fns";
 import { useGearDetails, useGearReviews } from "@/hooks/useGear";
-import { useCreateRental } from "@/hooks/useRentals";
 import { useIsAuthenticated, useUser } from "@/store/authStore";
 import { Badge } from "@/components/ui/Badge";
 import { Button, LinkButton } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { CardSkeleton, Skeleton } from "@/components/ui/Skeleton";
 import { cn, formatDate } from "@/lib/utils";
-import { showSuccess, showError } from "@/components/ui/Toast";
-import type { ReviewWithRelations, UserRole } from "@/types";
+import { showError } from "@/components/ui/Toast";
+import type { ReviewWithRelations } from "@/types";
 
 // ─── Star rating display ──────────────────────────────────────────────────────
 
@@ -283,8 +282,6 @@ function RentBox({ gearId, pricePerDay, stock, isAvailable }: RentBoxProps) {
   const [startDate, setStartDate] = useState(todayStr);
   const [endDate, setEndDate] = useState(tomorrowStr);
 
-  const createRental = useCreateRental();
-
   // Derived values
   const start = parseISO(startDate);
   const end   = parseISO(endDate);
@@ -307,24 +304,19 @@ function RentBox({ gearId, pricePerDay, stock, isAvailable }: RentBoxProps) {
     !startTooEarly &&
     !endBeforeStart;
 
-  const handleRent = useCallback(async () => {
+  // Navigate to checkout page, passing dates as search params
+  const handleRent = useCallback(() => {
     if (!isAuthenticated) {
-      router.push(`/auth/login?redirect=/gear/${gearId}`);
+      const returnTo = `/gear/${gearId}/checkout?startDate=${startDate}&endDate=${endDate}`;
+      router.push(`/auth/login?redirect=${encodeURIComponent(returnTo)}`);
       return;
     }
-    // Only CUSTOMER role can rent
     if (user?.role && (user.role as string) !== "CUSTOMER") {
-      showError("Unauthorized", "Only customers can create rental orders.");
+      showError("Only customers can rent gear.");
       return;
     }
-    try {
-      const order = await createRental.mutateAsync({ startDate, endDate, gearId });
-      showSuccess("Order placed!", "Awaiting provider confirmation.");
-      router.push(`/dashboard/customer/orders/${order.id}`);
-    } catch {
-      // error toast handled inside useCreateRental
-    }
-  }, [isAuthenticated, user, createRental, startDate, endDate, gearId, router]);
+    router.push(`/gear/${gearId}/checkout?startDate=${startDate}&endDate=${endDate}`);
+  }, [isAuthenticated, user, gearId, startDate, endDate, router]);
 
   if (!isAvailable || stock <= 0) {
     return (
@@ -426,14 +418,13 @@ function RentBox({ gearId, pricePerDay, stock, isAvailable }: RentBoxProps) {
         size="lg"
         block
         disabled={!canRent}
-        isLoading={createRental.isPending}
         onClick={handleRent}
       >
         {!isAuthenticated
           ? "Sign in to Rent"
           : daysCount === 0
             ? "Select valid dates"
-            : `Rent Now — ৳${totalPrice.toLocaleString("en-BD")}`}
+            : `Review & Rent — ৳${totalPrice.toLocaleString("en-BD")}`}
       </Button>
 
       {!isAuthenticated && (
