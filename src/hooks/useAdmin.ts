@@ -55,8 +55,9 @@ export function useUpdateUserStatus(
       }
       return { prevUsers };
     },
-    onSuccess: (_result, _vars) => {
-      toast.success("User status updated.");
+    onSuccess: (_result, vars) => {
+      const activated = vars.data.isActive;
+      toast.success(activated ? "User activated successfully." : "User suspended successfully.");
     },
     onError: (error, _vars, context) => {
       if (context?.prevUsers !== undefined) {

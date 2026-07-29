@@ -120,14 +120,13 @@ function ReceiptModal({
 
           {payment.rentalOrder && (
             <div className="text-center">
-              <LinkButton
+              <Link
                 href={`/dashboard/customer/orders/${payment.rentalOrderId}`}
-                variant="outline"
-                size="sm"
+                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
                 onClick={onClose}
               >
                 View full order →
-              </LinkButton>
+              </Link>
             </div>
           )}
         </div>

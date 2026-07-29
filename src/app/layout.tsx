@@ -4,7 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "next-themes";
 import QueryProvider from "@/providers/QueryProvider";
 import AuthProvider from "@/providers/AuthProvider";
-import { Navbar, Footer } from "@/components/layout";
+import { Navbar, Footer, NetworkStatus } from "@/components/layout";
 import { Toaster } from "@/components/ui/Toast";
 
 const geistSans = Geist({
@@ -61,6 +61,7 @@ export default function RootLayout({
               </main>
               <Footer />
               <Toaster />
+              <NetworkStatus />
             </AuthProvider>
           </QueryProvider>
         </ThemeProvider>

@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState, useMemo } from "react";
+import { use, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRentalDetails } from "@/hooks/useRentals";
@@ -8,9 +8,8 @@ import { useGearReviews } from "@/hooks/useGear";
 import { LinkButton, Button } from "@/components/ui/Button";
 import { StatusBadge, Badge } from "@/components/ui/Badge";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { showError } from "@/components/ui/Toast";
 import { cn, formatDate, formatDateTime, calculateDays } from "@/lib/utils";
-import { RentalStatus, PaymentStatus, PaymentMethod, RENTAL_STATUS_FLOW } from "@/types";
+import { RentalStatus, PaymentMethod, RENTAL_STATUS_FLOW } from "@/types";
 import type { RentalOrderWithRelations } from "@/types";
 import ReviewDialog from "@/components/review/ReviewDialog";
 
@@ -83,112 +82,6 @@ function StatusStepper({ status }: { status: RentalStatus }) {
         })}
       </ol>
     </div>
-  );
-}
-
-// ─── Star rating picker ───────────────────────────────────────────────────────
-
-function StarPicker({ value, onChange }: { value: number; onChange: (v: number) => void }) {
-  const [hovered, setHovered] = useState(0);
-  return (
-    <div className="flex items-center gap-1" role="group" aria-label="Star rating">
-      {[1, 2, 3, 4, 5].map((star) => (
-        <button
-          key={star}
-          type="button"
-          onClick={() => onChange(star)}
-          onMouseEnter={() => setHovered(star)}
-          onMouseLeave={() => setHovered(0)}
-          aria-label={`${star} star${star !== 1 ? "s" : ""}`}
-          className="transition-transform hover:scale-110 focus-visible:outline-none"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-            fill={(hovered || value) >= star ? "currentColor" : "none"}
-            stroke="currentColor" strokeWidth="1.5"
-            className={cn(
-              "h-8 w-8 transition-colors",
-              (hovered || value) >= star ? "text-amber-400" : "text-slate-300",
-            )}
-            aria-hidden="true"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round"
-              d="M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.562.562 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z"/>
-          </svg>
-        </button>
-      ))}
-    </div>
-  );
-}
-
-// ─── Review dialog ────────────────────────────────────────────────────────────
-
-const reviewSchema = z.object({
-  rating:  z.number().int().min(1, "Please select a rating").max(5),
-  comment: z.string().max(1000, "Max 1000 characters").optional(),
-});
-type ReviewForm = z.infer<typeof reviewSchema>;
-
-function ReviewDialog({
-  open, onClose, gearId, orderId,
-}: { open: boolean; onClose: () => void; gearId: string; orderId: string }) {
-  const { register, handleSubmit, setValue, watch, reset, formState: { errors, isSubmitting } } = useForm<ReviewForm>({
-    resolver: zodResolver(reviewSchema),
-    defaultValues: { rating: 0, comment: "" },
-  });
-
-  const rating = watch("rating");
-
-  const onSubmit = async (data: ReviewForm) => {
-    try {
-      await reviewApi.createReview({ rating: data.rating, comment: data.comment, gearId });
-      showSuccess("Review submitted", "Thank you for your feedback!");
-      reset();
-      onClose();
-    } catch (err) {
-      showError(err instanceof Error ? err.message : "Failed to submit review.");
-    }
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v) { reset(); onClose(); } }}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Leave a review</DialogTitle>
-          <DialogDescription>Share your experience to help other adventurers.</DialogDescription>
-          <DialogClose />
-        </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <div className="space-y-5 px-6 py-5">
-            <div className="space-y-2">
-              <label className="block text-sm font-semibold text-slate-700">Your rating</label>
-              <StarPicker value={rating} onChange={(v) => setValue("rating", v, { shouldValidate: true })} />
-              {errors.rating && <p className="text-xs text-red-600">{errors.rating.message}</p>}
-            </div>
-            <div className="space-y-1.5">
-              <label htmlFor="review-comment" className="block text-sm font-semibold text-slate-700">
-                Comment <span className="font-normal text-slate-400">(optional)</span>
-              </label>
-              <Textarea
-                id="review-comment"
-                placeholder="What did you think of the gear?"
-                rows={4}
-                {...register("comment")}
-                invalid={!!errors.comment}
-              />
-              {errors.comment && <p className="text-xs text-red-600">{errors.comment.message}</p>}
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" size="md" type="button" onClick={() => { reset(); onClose(); }}>
-              Cancel
-            </Button>
-            <Button variant="primary" size="md" type="submit" isLoading={isSubmitting} disabled={rating === 0 || isSubmitting}>
-              Submit review
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
   );
 }
 

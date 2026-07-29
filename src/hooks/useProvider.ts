@@ -174,8 +174,14 @@ export function useUpdateOrderStatus(
       queryClient.invalidateQueries({ queryKey: ["rentals", "details", id] });
       queryClient.invalidateQueries({ queryKey: ["admin", "rentals"] });
     },
-    onSuccess: () => {
-      toast.success("Order status updated.");
+    onSuccess: (_result, vars) => {
+      const messages: Record<string, string> = {
+        CONFIRMED: "Order confirmed — customer notified.",
+        CANCELLED: "Order rejected and cancelled.",
+        PICKED_UP: "Order marked as picked up.",
+        RETURNED:  "Order marked as returned.",
+      };
+      toast.success(messages[vars.data.status] ?? "Order status updated.");
     },
     ...options,
   });
