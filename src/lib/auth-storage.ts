@@ -12,14 +12,21 @@ function isBrowser() {
   return typeof window !== "undefined";
 }
 
-function msPerDay() {
-  return 24 * 60 * 60 * 1000;
+function isSecureContext(): boolean {
+  if (!isBrowser()) return false;
+  return (
+    window.location.protocol === "https:" ||
+    window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1"
+  );
 }
 
 function setCookie(name: string, value: string, days: number = COOKIE_DAYS) {
   if (!isBrowser()) return;
-  const expires = new Date(Date.now() + days * msPerDay()).toUTCString();
-  document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=${COOKIE_PATH}; SameSite=Lax`;
+  const expires = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toUTCString();
+  // Add Secure flag on HTTPS — required for modern browsers to persist cookies
+  const secure = isSecureContext() ? "; Secure" : "";
+  document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=${COOKIE_PATH}; SameSite=Lax${secure}`;
 }
 
 function getCookie(name: string): string | null {
@@ -38,7 +45,8 @@ function getCookie(name: string): string | null {
 
 function removeCookie(name: string) {
   if (!isBrowser()) return;
-  document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=${COOKIE_PATH}`;
+  const secure = isSecureContext() ? "; Secure" : "";
+  document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=${COOKIE_PATH}; SameSite=Lax${secure}`;
 }
 
 export function getToken(): string | null {

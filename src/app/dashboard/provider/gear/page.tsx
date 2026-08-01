@@ -36,8 +36,8 @@ function AvailabilityToggle({ gear }: { gear: GearItem }) {
             description: gear.description ?? undefined,
             brand:       gear.brand       ?? undefined,
             categoryId:  gear.categoryId,
-            price:       gear.price,
-            stock:       gear.stock,
+            price:       Number(gear.price),
+            stock:       Number(gear.stock),
             images:      gear.images,
             isAvailable: !gear.isAvailable,
           },
@@ -182,10 +182,19 @@ export default function ProviderInventoryPage() {
           <div className="space-y-3 lg:hidden">
             {gear.map((item) => {
               const imageSrc = item.images[0];
+              const unavailable = !item.isAvailable;
               return (
-                <div key={item.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm space-y-3">
+                <div key={item.id} className={cn(
+                  "rounded-2xl border bg-white p-4 shadow-sm space-y-3 transition-all",
+                  unavailable
+                    ? "border-slate-200 bg-slate-50/60 opacity-70"
+                    : "border-slate-200",
+                )}>
                   <div className="flex items-start gap-3">
-                    <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-slate-100">
+                    <div className={cn(
+                      "relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-slate-100",
+                      unavailable && "grayscale",
+                    )}>
                       {imageSrc ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={imageSrc} alt={item.name}
@@ -198,14 +207,18 @@ export default function ProviderInventoryPage() {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="truncate font-semibold text-slate-900">{item.name}</p>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="truncate font-semibold text-slate-900">{item.name}</p>
+                        {unavailable && (
+                          <span className="shrink-0 rounded-full border border-slate-300 bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                            Unlisted
+                          </span>
+                        )}
+                      </div>
                       <p className="text-xs text-slate-400">{item.brand ?? "—"}</p>
                       <div className="mt-1.5 flex flex-wrap gap-1.5">
-                        <Badge tone="blue" size="sm">৳{item.price.toLocaleString("en-BD")}/day</Badge>
+                        <Badge tone="blue" size="sm">৳{Number(item.price).toLocaleString("en-BD")}/day</Badge>
                         <Badge tone="slate" size="sm">Stock: {item.stock}</Badge>
-                        {item.isAvailable
-                          ? <Badge tone="emerald" size="sm">Available</Badge>
-                          : <Badge tone="suspended" size="sm">Unlisted</Badge>}
                       </div>
                     </div>
                   </div>
@@ -240,11 +253,15 @@ export default function ProviderInventoryPage() {
               <TableBody>
                 {gear.map((item) => {
                   const imageSrc = item.images[0];
+                  const unavailable = !item.isAvailable;
                   return (
-                    <TableRow key={item.id}>
+                    <TableRow key={item.id} className={cn(unavailable && "opacity-60 bg-slate-50/60")}>
                       <TableCell>
                         <div className="flex items-center gap-3">
-                          <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl bg-slate-100">
+                          <div className={cn(
+                            "relative h-11 w-11 shrink-0 overflow-hidden rounded-xl bg-slate-100",
+                            unavailable && "grayscale",
+                          )}>
                             {imageSrc ? (
                               // eslint-disable-next-line @next/next/no-img-element
                               <img src={imageSrc} alt={item.name}
@@ -257,13 +274,20 @@ export default function ProviderInventoryPage() {
                             )}
                           </div>
                           <div className="min-w-0">
-                            <p className="truncate text-sm font-semibold text-slate-900 max-w-48">{item.name}</p>
+                            <div className="flex items-center gap-2">
+                              <p className="truncate text-sm font-semibold text-slate-900 max-w-48">{item.name}</p>
+                              {unavailable && (
+                                <span className="shrink-0 rounded-full border border-slate-300 bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                                  Unlisted
+                                </span>
+                              )}
+                            </div>
                             {item.brand && <p className="text-xs text-slate-400">{item.brand}</p>}
                           </div>
                         </div>
                       </TableCell>
                       <TableCell className="font-semibold text-slate-900">
-                        ৳{item.price.toLocaleString("en-BD")}
+                        ৳{Number(item.price).toLocaleString("en-BD")}
                       </TableCell>
                       <TableCell>
                         <Badge

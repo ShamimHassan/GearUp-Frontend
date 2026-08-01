@@ -56,10 +56,12 @@ export function useCreatePayment(
     mutationFn: (data: CreatePaymentFormData) => paymentApi.createPayment(data),
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: PAYMENT_LIST_KEY });
-      if (result?.gatewayUrl && typeof window !== "undefined") {
+      // Backend returns gatewayPageURL; support both field names for safety
+      const url = result?.gatewayPageURL ?? result?.gatewayUrl;
+      if (url && typeof window !== "undefined") {
         toast.success("Redirecting to payment gateway...");
         window.setTimeout(() => {
-          window.location.href = result.gatewayUrl;
+          window.location.href = url;
         }, 500);
       }
     },

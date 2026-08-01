@@ -49,7 +49,7 @@ export default function AdminDashboardPage() {
     const activeRentals = rentals.filter((r) => ![RentalStatus.CANCELLED, RentalStatus.RETURNED].includes(r.status)).length;
     const totalRevenue  = rentals
       .filter((r) => r.payment?.status === PaymentStatus.COMPLETED)
-      .reduce((s, r) => s + (r.payment?.amount ?? 0), 0);
+      .reduce((s, r) => s + Number(r.payment?.amount ?? 0), 0);
     return { totalUsers, activeUsers, customers, providers, totalGear, activeRentals, totalRevenue };
   }, [users, gear, rentals]);
 

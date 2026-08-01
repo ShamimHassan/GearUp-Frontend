@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useUpdateProfile, useChangePassword } from "@/hooks/useAuth";
-import { useUser, useAuthActions } from "@/store/authStore";
+import { useUser, useSetUserAction } from "@/store/authStore";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/Tabs";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -109,7 +109,7 @@ function AvatarInitials({ name, role }: { name: string; role: UserRole }) {
 
 function ProfileForm() {
   const user = useUser();
-  const { setUser } = useAuthActions();
+  const setUser = useSetUserAction();
   const updateProfile = useUpdateProfile();
 
   const {

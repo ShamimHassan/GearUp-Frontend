@@ -139,7 +139,7 @@ export default function ProviderDashboardPage() {
     const activeRentals  = orders.filter((o) => o.status === RentalStatus.PICKED_UP).length;
     const totalRevenue   = orders
       .filter((o) => o.payment?.status === PaymentStatus.COMPLETED)
-      .reduce((s, o) => s + (o.payment?.amount ?? 0), 0);
+      .reduce((s, o) => s + Number(o.payment?.amount ?? 0), 0);
     return { totalGear, activeGear, pendingOrders, activeRentals, totalRevenue };
   }, [gear, orders]);
 

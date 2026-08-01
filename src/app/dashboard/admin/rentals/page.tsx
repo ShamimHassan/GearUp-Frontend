@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useAllRentalsAdmin } from "@/hooks/useAdmin";
+import { useAllRentalsAdmin, useAllGearAdmin } from "@/hooks/useAdmin";
 import { StatusBadge } from "@/components/ui/Badge";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/Table";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -22,6 +22,21 @@ const STATUS_TABS: Array<{ label: string; value: RentalStatus | "ALL" }> = [
 export default function AdminRentalsPage() {
   const [activeTab, setActiveTab] = useState<RentalStatus | "ALL">("ALL");
   const { data: rentals = [], isLoading, isError, error, refetch } = useAllRentalsAdmin();
+  // Fetch gear list so we can look up provider names (rental API doesn't include them)
+  const { data: allGear = [] } = useAllGearAdmin();
+
+  // Build a quick gearId → provider name lookup map
+  const providerByGearId = useMemo(() => {
+    const map: Record<string, string> = {};
+    allGear.forEach((g) => {
+      if (g.provider?.name) map[g.id] = g.provider.name;
+    });
+    return map;
+  }, [allGear]);
+
+  // Helper to get provider name for a rental
+  const getProvider = (r: (typeof rentals)[0]) =>
+    r.gear?.provider?.name ?? providerByGearId[r.gearId] ?? "—";
 
   const filtered = useMemo(
     () => activeTab === "ALL" ? rentals : rentals.filter((r) => r.status === activeTab),
@@ -122,7 +137,7 @@ export default function AdminRentalsPage() {
                   <div className="grid grid-cols-2 gap-2 text-xs border-t border-slate-100 pt-3">
                     <div>
                       <p className="text-slate-500">Provider</p>
-                      <p className="font-medium text-slate-700 truncate">{r.gear?.provider?.name ?? "—"}</p>
+                      <p className="font-medium text-slate-700 truncate">{getProvider(r)}</p>
                     </div>
                     <div>
                       <p className="text-slate-500">Amount</p>
@@ -173,7 +188,7 @@ export default function AdminRentalsPage() {
                           <p className="truncate text-xs text-slate-400 max-w-28">{r.customer?.email ?? ""}</p>
                         </div>
                       </TableCell>
-                      <TableCell className="text-sm text-slate-600 max-w-24 truncate">{r.gear?.provider?.name ?? "—"}</TableCell>
+                      <TableCell className="text-sm text-slate-600 max-w-24 truncate">{getProvider(r)}</TableCell>
                       <TableCell className="text-sm text-slate-700 max-w-28 truncate">{r.gear?.name ?? "—"}</TableCell>
                       <TableCell>
                         <p className="text-sm text-slate-700">{formatDate(r.startDate)} – {formatDate(r.endDate)}</p>

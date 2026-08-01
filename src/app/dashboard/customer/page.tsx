@@ -136,7 +136,7 @@ export default function CustomerDashboardPage() {
     ).length;
     const totalSpent = payments
       .filter((p) => p.status === PaymentStatus.COMPLETED)
-      .reduce((sum, p) => sum + p.amount, 0);
+      .reduce((sum, p) => sum + Number(p.amount), 0);
     return { totalRentals, activeRentals, pendingActions, totalSpent };
   }, [rentals, payments]);
 

@@ -11,10 +11,7 @@ import {
 } from "@/lib/validation";
 import { UserRole } from "@/types";
 import { useLogin } from "@/hooks/useAuth";
-import {
-  useAuthActions,
-  useIsAuthenticated,
-} from "@/store/authStore";
+import { useLoginAction, useIsAuthenticated, useUser } from "@/store/authStore";
 import { Button, LinkButton } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
@@ -47,7 +44,7 @@ function extractUnauthedBanner(search: string | null): string | null {
     return null;
   }
 }
-
+     
 export default function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -55,7 +52,8 @@ export default function LoginForm() {
   const fromParam = searchParams.get("from");
 
   const isAuthenticated = useIsAuthenticated();
-  const { login: storeLogin } = useAuthActions();
+  const user = useUser();
+  const storeLogin = useLoginAction();
   const loginMutation = useLogin();
 
   const [showPw, setShowPw] = useState(false);
@@ -75,12 +73,13 @@ export default function LoginForm() {
     },
   });
 
-  const unauthedBanner = extractUnauthedBanner(fromParam ?? redirectParam);
+  const unauthedBanner = extractUnauthedBanner(fromParam);
 
+  // If already authenticated (e.g. navigated back to login), redirect to correct dashboard
   useEffect(() => {
-    if (!isAuthenticated) return;
-    router.replace(roleDashboard(UserRole.CUSTOMER));
-  }, [isAuthenticated, router]);
+    if (!isAuthenticated || !user) return;
+    router.replace(roleDashboard(user.role));
+  }, [isAuthenticated, user, router]);
 
   const onSubmit = async (data: LoginSchemaInput) => {
     try {
@@ -89,6 +88,14 @@ export default function LoginForm() {
         password: data.password,
       });
 
+      // 1. Set cookie server-side so middleware can read it on the next request
+      await fetch("/api/auth/set-token", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: payload.token }),
+      });
+
+      // 2. Update Zustand store (also writes localStorage + client cookie as fallback)
       storeLogin(payload.token, payload.user);
 
       const target = redirectParam && /^\/[A-Za-z0-9_/?=&%-]*$/.test(redirectParam)
@@ -165,10 +172,6 @@ export default function LoginForm() {
             <path d="M12 8v4" />
             <path d="M12 16h.01" />
           </svg>
-          <div className="flex-1 text-sm text-amber-800">
-            <p className="font-semibold">Sign in required</p>
-            <p className="text-amber-700">{unauthedBanner}</p>
-          </div>
         </div>
       )}
 
@@ -316,11 +319,7 @@ export default function LoginForm() {
             <span className="hidden sm:inline">GitHub</span>
           </button>
         </div>
-        <div className="flex justify-center">
-          <Badge tone="amber" size="sm" className="bg-transparent">
-            OAuth coming soon
-          </Badge>
-        </div>
+       
 
         <p className="text-center text-xs text-slate-500 leading-relaxed">
           By signing in, you agree to GearUp's{" "}

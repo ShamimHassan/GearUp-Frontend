@@ -304,7 +304,8 @@ export const RENTAL_STATUS_FLOW: RentalStatusStep[] = [
 ];
 
 export interface PaymentInitiationResult {
-  gatewayUrl: string;
+  gatewayUrl?: string;
+  gatewayPageURL?: string;  // backend returns this field name
   transactionId?: string;
   sessionId?: string;
 }

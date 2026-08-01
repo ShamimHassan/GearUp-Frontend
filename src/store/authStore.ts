@@ -72,6 +72,10 @@ const stateCreator: StateCreator<AuthState, [], [], AuthState> = (set, get) => (
 
   logout: () => {
     storageClearAuth();
+    // Clear the server-side cookie too
+    if (typeof window !== "undefined") {
+      fetch("/api/auth/set-token", { method: "DELETE" }).catch(() => {});
+    }
     set({
       ...initialState,
       hasHydrated: true,
@@ -169,19 +173,43 @@ export function useHasHydrated(): boolean {
   return useAuthStore((s) => s.hasHydrated);
 }
 
+// Individual action selectors — avoids returning a new object on every render
+// which would cause infinite re-render loops in useEffect dependencies
+export function useLoginAction() {
+  return useAuthStore((s) => s.login);
+}
+export function useLogoutAction() {
+  return useAuthStore((s) => s.logout);
+}
+export function useSetUserAction() {
+  return useAuthStore((s) => s.setUser);
+}
+export function useSetTokenAction() {
+  return useAuthStore((s) => s.setToken);
+}
+export function useCheckAuthAction() {
+  return useAuthStore((s) => s.checkAuth);
+}
+export function useHydrateAction() {
+  return useAuthStore((s) => s.hydrate);
+}
+export function useResetLoadingAction() {
+  return useAuthStore((s) => s.resetLoading);
+}
+
+/** @deprecated Use individual action hooks instead to avoid re-render loops */
 export function useAuthActions(): Pick<
   AuthState,
   "login" | "logout" | "setUser" | "setToken" | "checkAuth" | "hydrate" | "resetLoading"
 > {
-  return useAuthStore((s) => ({
-    login: s.login,
-    logout: s.logout,
-    setUser: s.setUser,
-    setToken: s.setToken,
-    checkAuth: s.checkAuth,
-    hydrate: s.hydrate,
-    resetLoading: s.resetLoading,
-  }));
+  const login = useAuthStore((s) => s.login);
+  const logout = useAuthStore((s) => s.logout);
+  const setUser = useAuthStore((s) => s.setUser);
+  const setToken = useAuthStore((s) => s.setToken);
+  const checkAuth = useAuthStore((s) => s.checkAuth);
+  const hydrate = useAuthStore((s) => s.hydrate);
+  const resetLoading = useAuthStore((s) => s.resetLoading);
+  return { login, logout, setUser, setToken, checkAuth, hydrate, resetLoading };
 }
 
 export { useAuthStore };

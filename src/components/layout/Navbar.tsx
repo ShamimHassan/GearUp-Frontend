@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { UserRole } from "@/types";
 import {
-  useAuthActions,
+  useLogoutAction,
   useIsAuthenticated,
   useUser,
 } from "@/store/authStore";
@@ -60,7 +60,7 @@ export default function Navbar() {
   const router = useRouter();
   const user = useUser();
   const isAuthenticated = useIsAuthenticated();
-  const { logout } = useAuthActions();
+  const logout = useLogoutAction();
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);

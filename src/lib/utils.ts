@@ -12,6 +12,14 @@ export function formatCurrency(amount: number, currency = "USD") {
   }).format(amount);
 }
 
+/**
+ * Format a BDT amount — coerces string amounts from the API to number first
+ * to prevent string concatenation bugs in reduce() and display.
+ */
+export function formatBDT(amount: number | string): string {
+  return Number(amount).toLocaleString("en-BD");
+}
+
 export function formatDate(date: Date | string) {
   return new Intl.DateTimeFormat("en-US", {
     year: "numeric",

@@ -12,7 +12,7 @@ import {
 } from "@/lib/validation";
 import { UserRole } from "@/types";
 import { useRegister } from "@/hooks/useAuth";
-import { useAuthActions, useIsAuthenticated } from "@/store/authStore";
+import { useLoginAction, useIsAuthenticated } from "@/store/authStore";
 import { Button, LinkButton } from "@/components/ui/Button";
 import { Input, Textarea } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
@@ -95,7 +95,7 @@ export default function RegisterForm() {
   const redirect = searchParams.get("redirect") ?? undefined;
 
   const isAuthenticated = useIsAuthenticated();
-  const { login: storeLogin } = useAuthActions();
+  const storeLogin = useLoginAction();
   const registerMutation = useRegister();
 
   const [showPw, setShowPw] = useState(false);
@@ -139,6 +139,13 @@ export default function RegisterForm() {
         role: data.role,
         phone: data.phone?.trim() || undefined,
         address: data.address?.trim() || undefined,
+      });
+
+      // Set cookie server-side so middleware reads it immediately
+      await fetch("/api/auth/set-token", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: payload.token }),
       });
 
       storeLogin(payload.token, payload.user);

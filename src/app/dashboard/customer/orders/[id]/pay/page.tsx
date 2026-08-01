@@ -110,7 +110,8 @@ export default function PayPage({
         method,
       });
       // useCreatePayment's onSuccess already handles redirect via window.location.href
-      if (!result?.gatewayUrl) {
+      const url = result?.gatewayPageURL ?? result?.gatewayUrl;
+      if (!url) {
         showError("No gateway URL returned. Please try again.");
         setRedirecting(false);
       }

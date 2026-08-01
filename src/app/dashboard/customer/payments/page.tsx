@@ -205,7 +205,7 @@ export default function CustomerPaymentsPage() {
   const stats = useMemo(() => {
     const totalPaid = payments
       .filter((p) => p.status === PaymentStatus.COMPLETED)
-      .reduce((s, p) => s + p.amount, 0);
+      .reduce((s, p) => s + Number(p.amount), 0);
     const pending = payments.filter((p) => p.status === PaymentStatus.PENDING).length;
     const failed  = payments.filter((p) => p.status === PaymentStatus.FAILED).length;
     return { totalPaid, pending, failed };

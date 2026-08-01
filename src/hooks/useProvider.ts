@@ -59,14 +59,51 @@ export function useUpdateGear(
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: GearFormData }) =>
       providerApi.updateGear(id, data),
-    onSuccess: (_result, { id }) => {
-      queryClient.invalidateQueries({ queryKey: PROVIDER_GEAR_KEY });
+    // Optimistic update — update cache immediately so toggle reflects instantly
+    onMutate: async ({ id, data }) => {
+      await queryClient.cancelQueries({ queryKey: PROVIDER_GEAR_KEY });
+      const prev = queryClient.getQueryData<GearItem[]>(PROVIDER_GEAR_KEY);
+      if (prev) {
+        queryClient.setQueryData<GearItem[]>(
+          PROVIDER_GEAR_KEY,
+          prev.map((g) =>
+            g.id === id
+              ? {
+                  ...g,
+                  name:        data.name,
+                  description: data.description ?? g.description,
+                  brand:       data.brand ?? g.brand,
+                  categoryId:  data.categoryId,
+                  price:       Number(data.price),
+                  stock:       Number(data.stock),
+                  images:      data.images && data.images.length > 0 ? data.images : g.images,
+                  isAvailable: data.isAvailable ?? g.isAvailable,
+                }
+              : g,
+          ),
+        );
+      }
+      return { prev };
+    },
+    onError: (error, _vars, context) => {
+      // Roll back on error
+      if (context?.prev) {
+        queryClient.setQueryData(PROVIDER_GEAR_KEY, context.prev);
+      }
+      toast.error(error.message || "Failed to update gear item.");
+    },
+    onSuccess: (result, { id }) => {
+      // Update cache with actual server response
+      const prev = queryClient.getQueryData<GearItem[]>(PROVIDER_GEAR_KEY);
+      if (prev) {
+        queryClient.setQueryData<GearItem[]>(
+          PROVIDER_GEAR_KEY,
+          prev.map((g) => (g.id === id ? result : g)),
+        );
+      }
       queryClient.invalidateQueries({ queryKey: PUBLIC_GEAR_LIST_KEY });
       queryClient.invalidateQueries({ queryKey: ["gear", "details", id] });
       toast.success("Gear item updated successfully.");
-    },
-    onError: (error) => {
-      toast.error(error.message || "Failed to update gear item.");
     },
     ...options,
   });
